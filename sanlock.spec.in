@@ -61,7 +61,8 @@ make -C wdmd \
         DESTDIR=$RPM_BUILD_ROOT
 make -C python \
         install LIBDIR=%{_libdir} \
-        DESTDIR=$RPM_BUILD_ROOT
+        DESTDIR=$RPM_BUILD_ROOT \
+        PY_VERSION=2.7
 make -C reset \
         install LIBDIR=%{_libdir} \
         DESTDIR=$RPM_BUILD_ROOT
