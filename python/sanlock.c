@@ -1604,14 +1604,37 @@ exit_fail:
     return excp;
 }
 
+
+/* Init Sanlock module */
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "sanlock",
+        NULL,
+        0,
+        sanlock_methods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+
+PyMODINIT_FUNC
+PyInit_sanlock(void)
+#else
 PyMODINIT_FUNC
 initsanlock(void)
+#endif
 {
     PyObject *py_module, *sk_constant;
-
+    	
+#if PY_MAJOR_VERSION >= 3
+    py_module = PyModule_Create(&moduledef);
+#else
     py_module = Py_InitModule4("sanlock",
                 sanlock_methods, pydoc_sanlock, NULL, PYTHON_API_VERSION);
-
+#endif
     if (py_module == NULL)
         return;
 
