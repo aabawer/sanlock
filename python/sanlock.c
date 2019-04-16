@@ -30,6 +30,36 @@
 #define __neg_sets_exception
 #endif
 
+/* py2py3 function wrappers */
+long Py2Py3IntAsLong(PyObject* obj)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyLong_AsLong(obj);
+#else
+	return PyInt_AsLong(obj);
+#endif
+}
+
+int Py2Py3StringCheck(PyObject* obj)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_Check(obj);
+#else
+	return PyString_Check(obj);
+#endif
+}
+
+PyObject* Py2Py3FromString(const char* str)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_FromString(str);
+#else
+	return PyString_FromString(str);
+#endif
+}
+
+
+
 /* Functions prototypes */
 static void __set_exception(int en, char *msg) __sets_exception;
 static int __parse_resource(PyObject *obj, struct sanlk_resource **res_ret) __neg_sets_exception;
@@ -109,7 +139,7 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
                 __set_exception(EINVAL, "Invalid resource offset");
                 goto exit_fail;
             }
-        } else if (PyString_Check(tuple)) {
+        } else if (Py2Py3StringCheck(tuple)) {
             p = PyString_AsString(tuple);
         }
 
@@ -123,7 +153,7 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
         if (offset == NULL) {
             res->disks[i].offset = 0;
         } else {
-            res->disks[i].offset = PyInt_AsLong(offset);
+            res->disks[i].offset = Py2Py3IntAsLong(offset);
         }
     }
 
@@ -455,7 +485,7 @@ py_read_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: lockspace */
-    if ((ls_entry = PyString_FromString(ls.name)) == NULL)
+    if ((ls_entry = Py2Py3FromString(ls.name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(ls_info, "lockspace", ls_entry);
     Py_DECREF(ls_entry);
@@ -536,7 +566,7 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: lockspace */
-    if ((rs_entry = PyString_FromString(rs->lockspace_name)) == NULL)
+    if ((rs_entry = Py2Py3FromString(rs->lockspace_name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(rs_info, "lockspace", rs_entry);
     Py_DECREF(rs_entry);
@@ -544,7 +574,7 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: resource */
-    if ((rs_entry = PyString_FromString(rs->name)) == NULL)
+    if ((rs_entry = Py2Py3FromString(rs->name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(rs_info, "resource", rs_entry);
     Py_DECREF(rs_entry);
@@ -830,7 +860,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: lockspace */
-        if ((ls_value = PyString_FromString(lss[i].name)) == NULL)
+        if ((ls_value = Py2Py3FromString(lss[i].name)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "lockspace", ls_value);
         Py_DECREF(ls_value);
@@ -846,7 +876,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: path */
-        if ((ls_value = PyString_FromString(lss[i].host_id_disk.path)) == NULL)
+        if ((ls_value = Py2Py3FromString(lss[i].host_id_disk.path)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "path", ls_value);
         Py_DECREF(ls_value);
