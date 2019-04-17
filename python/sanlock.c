@@ -63,7 +63,7 @@ const char* Py2Py3AsString(const char* str)
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_AsUTF8(str);
 #else
-	return pyString_AsString(str);	
+	return PyString_AsString(str);	
 #endif
 }
 
