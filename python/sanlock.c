@@ -67,6 +67,15 @@ const char* Py2Py3AsString(const char* str)
 #endif
 }
 
+unsigned long Py2Py3IntAsUnsignedLongMask(PyObject* obj)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyLong_AsUnsignedLongMask(obj);
+#else
+	return PyInt_AsUnsignedLongMask(obj);
+#endif
+}
+
 
 /* Functions prototypes */
 static void __set_exception(int en, char *msg) __sets_exception;
@@ -1022,7 +1031,7 @@ py_acquire(PyObject *self __unused, PyObject *args, PyObject *keywds)
     /* prepare the resource version */
     if (version != Py_None) {
         res->flags |= SANLK_RES_LVER;
-        res->lver = PyInt_AsUnsignedLongMask(version);
+        res->lver = Py2Py3IntAsUnsignedLongMask(version);
         if (res->lver == -1) {
             __set_exception(EINVAL, "Unable to convert the version value");
             goto exit_fail;
@@ -1138,7 +1147,7 @@ py_request(PyObject *self __unused, PyObject *args, PyObject *keywds)
         flags = SANLK_REQUEST_NEXT_LVER;
     } else {
         res->flags |= SANLK_RES_LVER;
-        res->lver = PyInt_AsUnsignedLongMask(version);
+        res->lver = Py2Py3IntAsUnsignedLongMask(version);
         if (res->lver == -1) {
             __set_exception(EINVAL, "Unable to convert the version value");
             goto exit_fail;
