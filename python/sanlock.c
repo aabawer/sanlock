@@ -87,6 +87,15 @@ PyObject* Py2Py3IntFromLong(long val)
 }
 
 
+int Py2Py3IntCheck(PyObject* obj)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyLong_Check(obj);
+#else
+	return PyInt_Check(obj);
+#endif
+}
+
 /* Functions prototypes */
 static void __set_exception(int en, char *msg) __sets_exception;
 static int __parse_resource(PyObject *obj, struct sanlk_resource **res_ret) __neg_sets_exception;
@@ -162,7 +171,7 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
 
             p = Py2Py3AsString(path);
 
-            if (!PyInt_Check(offset)) {
+            if (!Py2Py3IntCheck(offset)) {
                 __set_exception(EINVAL, "Invalid resource offset");
                 goto exit_fail;
             }
