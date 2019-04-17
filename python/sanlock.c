@@ -77,6 +77,16 @@ unsigned long Py2Py3IntAsUnsignedLongMask(PyObject* obj)
 }
 
 
+PyObject* Py2Py3IntFromLong(long val)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyLong_FromLong(val);		
+#else
+	return PyInt_FromLong(val);
+#endif
+}
+
+
 /* Functions prototypes */
 static void __set_exception(int en, char *msg) __sets_exception;
 static int __parse_resource(PyObject *obj, struct sanlk_resource **res_ret) __neg_sets_exception;
@@ -197,7 +207,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: host_id */
-        if ((ls_value = PyInt_FromLong(hss[i].host_id)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(hss[i].host_id)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "host_id", ls_value);
         Py_DECREF(ls_value);
@@ -205,7 +215,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: generation */
-        if ((ls_value = PyInt_FromLong(hss[i].generation)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(hss[i].generation)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "generation", ls_value);
         Py_DECREF(ls_value);
@@ -213,7 +223,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: timestamp */
-        if ((ls_value = PyInt_FromLong(hss[i].timestamp)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(hss[i].timestamp)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "timestamp", ls_value);
         Py_DECREF(ls_value);
@@ -221,7 +231,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: io_timeout */
-        if ((ls_value = PyInt_FromLong(hss[i].io_timeout)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(hss[i].io_timeout)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "io_timeout", ls_value);
         Py_DECREF(ls_value);
@@ -229,7 +239,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: flags */
-        if ((ls_value = PyInt_FromLong(hss[i].flags)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(hss[i].flags)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "flags", ls_value);
         Py_DECREF(ls_value);
@@ -272,7 +282,7 @@ py_register(PyObject *self __unused, PyObject *args)
         return NULL;
     }
 
-    return PyInt_FromLong(sanlockfd);
+    return Py2Py3IntFromLong(sanlockfd);
 }
 
 /* get_alignment */
@@ -305,7 +315,7 @@ py_get_alignment(PyObject *self __unused, PyObject *args)
         return NULL;
     }
 
-    return PyInt_FromLong(rv);
+    return Py2Py3IntFromLong(rv);
 }
 
 /* init_lockspace */
@@ -510,7 +520,7 @@ py_read_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: iotimeout */
-    if ((ls_entry = PyInt_FromLong(io_timeout)) == NULL)
+    if ((ls_entry = Py2Py3IntFromLong(io_timeout)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(ls_info, "iotimeout", ls_entry);
     Py_DECREF(ls_entry);
@@ -885,7 +895,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: host_id */
-        if ((ls_value = PyInt_FromLong(lss[i].host_id)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(lss[i].host_id)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "host_id", ls_value);
         Py_DECREF(ls_value);
@@ -901,7 +911,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: offset */
-        if ((ls_value = PyInt_FromLong(lss[i].host_id_disk.offset)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(lss[i].host_id_disk.offset)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "offset", ls_value);
         Py_DECREF(ls_value);
@@ -909,7 +919,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: flags */
-        if ((ls_value = PyInt_FromLong(lss[i].flags)) == NULL)
+        if ((ls_value = Py2Py3IntFromLong(lss[i].flags)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "flags", ls_value);
         Py_DECREF(ls_value);
@@ -1695,7 +1705,7 @@ initsanlock(void)
     }
 
 #define PYSNLK_INIT_ADD_CONSTANT(x, y) \
-    if ((sk_constant = PyInt_FromLong(x)) != NULL) { \
+    if ((sk_constant = Py2Py3IntFromLong(x)) != NULL) { \
         if (PyModule_AddObject(py_module, y, sk_constant)) { \
             Py_DECREF(sk_constant); \
         } \
