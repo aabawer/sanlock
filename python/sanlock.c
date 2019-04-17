@@ -58,6 +58,14 @@ PyObject* Py2Py3FromString(const char* str)
 #endif
 }
 
+const char* Py2Py3AsString(const char* str)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_AsUTF8(str);
+#else
+	return pyString_AsString(str);	
+#endif
+}
 
 
 /* Functions prototypes */
@@ -133,14 +141,14 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
             path = PyTuple_GetItem(tuple, 0);
             offset = PyTuple_GetItem(tuple, 1);
 
-            p = PyString_AsString(path);
+            p = Py2Py3AsString(path);
 
             if (!PyInt_Check(offset)) {
                 __set_exception(EINVAL, "Invalid resource offset");
                 goto exit_fail;
             }
         } else if (Py2Py3StringCheck(tuple)) {
-            p = PyString_AsString(tuple);
+            p = Py2Py3AsString(tuple);
         }
 
         if (p == NULL) {
@@ -1245,7 +1253,7 @@ py_killpath(PyObject *self __unused, PyObject *args, PyObject *keywds)
         size_t arg_len;
 
         item = PyList_GetItem(argslist, i);
-        p = PyString_AsString(item);
+        p = Py2Py3AsString(item);
 
         if (p == NULL) {
             __set_exception(EINVAL, "Killpath argument not a string");
