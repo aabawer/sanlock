@@ -30,6 +30,8 @@
 #define __neg_sets_exception
 #endif
 
+#define MODULE_NAME "sanlock"
+
 /* py2py3 function wrappers */
 long Py2Py3IntAsLong(PyObject* obj)
 {
@@ -1739,7 +1741,7 @@ int module_init(PyObject* py_module)
 /* Python3 module init */
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        "sanlock",
+        MODULE_NAME,
         pydoc_sanlock,
         -1,
         sanlock_methods,
@@ -1768,8 +1770,11 @@ initsanlock(void)
 {
     PyObject *py_module;
 
-    py_module = Py_InitModule4("sanlock",
-                sanlock_methods, pydoc_sanlock, NULL, PYTHON_API_VERSION);
+    py_module = Py_InitModule4(MODULE_NAME,
+            sanlock_methods,
+            pydoc_sanlock,
+            NULL,
+            PYTHON_API_VERSION);
 
     if (py_module == NULL)
         return;
