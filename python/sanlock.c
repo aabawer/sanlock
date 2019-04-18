@@ -58,12 +58,12 @@ PyObject* Py2Py3FromString(const char* str)
 #endif
 }
 
-const char* Py2Py3AsString(const char* str)
+const char* Py2Py3AsString(PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
-	return PyUnicode_AsUTF8(str);
+	return PyUnicode_AsUTF8(obj);
 #else
-	return PyString_AsString(str);	
+	return PyString_AsString(obj);	
 #endif
 }
 
@@ -155,7 +155,7 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
     res->num_disks = num_disks;
 
     for (i = 0; i < num_disks; i++) {
-        char *p = NULL;
+        const char *p = NULL;
         PyObject *tuple, *path = NULL, *offset = NULL;
 
         tuple = PyList_GetItem(obj, i);
@@ -1681,21 +1681,22 @@ int module_init(PyObject* py_module)
     py_exception = initexception();
 
     if (py_exception == NULL)
-        return;
+        return -1;
 
-    if (PyModule_AddObject(py_module, "SanlockException", py_exception) == 0) {
+    if (PyModule_AddObject(py_module, "SanlockException", py_exception) == 0)
+   	{
         Py_INCREF(py_exception);
     }
     else
     {
- 	return -1;
+ 		return -1;
     }
 
 #define PYSNLK_INIT_ADD_CONSTANT(x, y) \
     if ((sk_constant = Py2Py3IntFromLong(x)) != NULL) { \
         if (PyModule_AddObject(py_module, y, sk_constant) != 0) { \
             Py_DECREF(sk_constant); \
-	    return -1; \
+	    	return -1; \
         } \
     }
 
