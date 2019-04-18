@@ -51,10 +51,21 @@ int Py2Py3StringCheck(PyObject* obj)
 #endif
 }
 
-PyObject* Py2Py3FromString(const char* str)
+
+PyObject* Py2Py3StringFromString(const char* str)
 {
 #if PY_MAJOR_VERSION >= 3
-	return PyUnicode_FromString(str);
+	return PyUnicode_FromString(str);    
+#else
+	return PyString_FromString(str);
+#endif
+}
+
+
+PyObject* Py2Py3BytesFromString(const char* str)
+{
+#if PY_MAJOR_VERSION >= 3	
+    return PyBytes_FromString(str);
 #else
 	return PyString_FromString(str);
 #endif
@@ -523,7 +534,7 @@ py_read_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: lockspace */
-    if ((ls_entry = Py2Py3FromString(ls.name)) == NULL)
+    if ((ls_entry = Py2Py3BytesFromString(ls.name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(ls_info, "lockspace", ls_entry);
     Py_DECREF(ls_entry);
@@ -604,7 +615,7 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: lockspace */
-    if ((rs_entry = Py2Py3FromString(rs->lockspace_name)) == NULL)
+    if ((rs_entry = Py2Py3BytesFromString(rs->lockspace_name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(rs_info, "lockspace", rs_entry);
     Py_DECREF(rs_entry);
@@ -612,7 +623,7 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: resource */
-    if ((rs_entry = Py2Py3FromString(rs->name)) == NULL)
+    if ((rs_entry = Py2Py3BytesFromString(rs->name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(rs_info, "resource", rs_entry);
     Py_DECREF(rs_entry);
@@ -898,7 +909,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: lockspace */
-        if ((ls_value = Py2Py3FromString(lss[i].name)) == NULL)
+        if ((ls_value = Py2Py3BytesFromString(lss[i].name)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "lockspace", ls_value);
         Py_DECREF(ls_value);
@@ -914,7 +925,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: path */
-        if ((ls_value = Py2Py3FromString(lss[i].host_id_disk.path)) == NULL)
+        if ((ls_value = Py2Py3StringFromString(lss[i].host_id_disk.path)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "path", ls_value);
         Py_DECREF(ls_value);

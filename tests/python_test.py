@@ -23,7 +23,7 @@ def test_write_lockspace(tmpdir, sanlock_daemon):
     sanlock.write_lockspace("name", path, offset=0, iotimeout=1)
 
     ls = sanlock.read_lockspace(path, offset=0)
-    assert ls == {"iotimeout": 1, "lockspace": "name"}
+    assert ls == {"iotimeout": 1, "lockspace": b'name'}
 
     acquired = sanlock.inq_lockspace("name", 1, path, wait=False)
     assert acquired is False
@@ -47,8 +47,8 @@ def test_write_resource(tmpdir, sanlock_daemon):
 
     res = sanlock.read_resource(path, 0)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b'ls_name',
+        "resource": b'res_name',
         "version": 0
     }
 
@@ -147,8 +147,8 @@ def test_acquire_release_resource(tmpdir, sanlock_daemon):
 
     res = sanlock.read_resource(res_path, 0)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b'ls_name',
+        "resource": b'res_name',
         "version": 0
     }
 
@@ -160,8 +160,8 @@ def test_acquire_release_resource(tmpdir, sanlock_daemon):
 
     res = sanlock.read_resource(res_path, 0)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b'ls_name',
+        "resource": b'res_name',
         "version": 1
     }
 
@@ -181,8 +181,8 @@ def test_acquire_release_resource(tmpdir, sanlock_daemon):
 
     res = sanlock.read_resource(res_path, 0)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b'ls_name',
+        "resource": b'res_name',
         "version": 1
     }
 
