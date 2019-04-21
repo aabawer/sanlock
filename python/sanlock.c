@@ -31,7 +31,11 @@
 #endif
 
 #define MODULE_NAME "sanlock"
-
+    
+/* Functions prototypes */
+static void __set_exception(int en, char *msg) __sets_exception;
+static int __parse_resource(PyObject *obj, struct sanlk_resource **res_ret) __neg_sets_exception;
+    
 /* py2py3 function wrappers */
 long Py2Py3_IntAsLong(PyObject* obj)
 {
@@ -104,10 +108,66 @@ int Py2Py3_IntCheck(PyObject* obj)
 	return PyInt_Check(obj);
 #endif
 }
+/*
+ * Path converter function
+ * 
+ * Inputs:
+ *      arg  -  pointer to parsed python argument.
+ *      path -  pointer to resulting path upon successful conversion.
+ *              address of path pointer should refer to chars array 
+ *              of size SANLK_PATH_LEN.
+ *
+ * Returns:
+ *      1 - on successful conversion.
+ *      0 - on conversion failure.  
+ * 
+ */
+int Py2Py3_PathConverter(PyObject* arg, void* path)
+{       
+    PyObject *bytes = NULL;
+    const char* path_bytes = NULL;
+            
+    if (arg == NULL || arg == Py_None)
+        return 0;
+        
+    if (path == NULL)
+        return 0;
+    
+#if PY_MAJOR_VERSION >= 3    
+    /* Python3 handling of unicode/bytes object */
+    if (!PyUnicode_FSConverter(arg, &bytes)){
+        __set_exception(EINVAL, "Unable to convert path");
+        return 0;    
+    }
+#else    
+    /* Python2 handling of unicode/bytes object */
+    if (PyUnicode_Check(arg)) 
+        bytes = PyUnicode_AsUTF8String(arg);
+    else if (PyBytes_Check(arg)) 
+        bytes = PyObject_Bytes(arg);
+    else 
+    {
+        __set_exception(EINVAL, "Unable to convert path");
+        return 0;        
+    }
+#endif        
+    path_bytes = PyBytes_AsString(bytes);    
+    if (path_bytes == NULL){
+        Py_XDECREF(bytes);
+        __set_exception(EINVAL, "Unable to convert path");
+        return 0;
+    }      
+    /* 
+     * bytes object must be released so we need to copy its
+     * path_bytes internal refernce to the result path
+     */    
+    strncpy((char*)path, path_bytes, SANLK_PATH_LEN - 1);
 
-/* Functions prototypes */
-static void __set_exception(int en, char *msg) __sets_exception;
-static int __parse_resource(PyObject *obj, struct sanlk_resource **res_ret) __neg_sets_exception;
+    /* success */
+    Py_XDECREF(bytes);
+    return 1;
+}
+
 
 /* Sanlock module */
 PyDoc_STRVAR(pydoc_sanlock, "\
@@ -347,7 +407,8 @@ static PyObject *
 py_init_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
 {
     int rv, max_hosts = 0, num_hosts = 0, use_aio = 1;
-    const char *lockspace, *path;
+    const char *lockspace;
+    char path[SANLK_PATH_LEN];
     struct sanlk_lockspace ls;
 
     static char *kwlist[] = {"lockspace", "path", "offset",
@@ -357,8 +418,8 @@ py_init_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     memset(&ls, 0, sizeof(struct sanlk_lockspace));
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "ss|kiii", kwlist,
-        &lockspace, &path, &ls.host_id_disk.offset, &max_hosts,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sO&|kiii", kwlist,
+        &lockspace, Py2Py3_PathConverter, &path, &ls.host_id_disk.offset, &max_hosts,
         &num_hosts, &use_aio)) {
         return NULL;
     }
@@ -445,7 +506,8 @@ py_write_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     int rv, max_hosts = 0;
     uint32_t io_timeout = 0;
     uint32_t  align=SANLK_LSF_ALIGN1M, sector=SANLK_LSF_SECTOR512;
-    const char *lockspace, *path;
+    const char *lockspace;
+    char path[SANLK_PATH_LEN];
     struct sanlk_lockspace ls;
 
     static char *kwlist[] = {"lockspace", "path", "offset", "max_hosts",
@@ -455,8 +517,8 @@ py_write_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     memset(&ls, 0, sizeof(struct sanlk_lockspace));
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "ss|kiIII", kwlist,
-        &lockspace, &path, &ls.host_id_disk.offset, &max_hosts,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sO&|kiIII", kwlist,
+        &lockspace, Py2Py3_PathConverter, path, &ls.host_id_disk.offset, &max_hosts,
         &io_timeout, &align, &sector)) {
         return NULL;
     }
@@ -493,7 +555,7 @@ py_read_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     int rv;
     uint32_t io_timeout = 0;
     uint32_t  align=SANLK_LSF_ALIGN1M, sector=SANLK_LSF_SECTOR512;
-    const char *path;
+    char path[SANLK_PATH_LEN];
     struct sanlk_lockspace ls;
     PyObject *ls_info = NULL, *ls_entry = NULL;
 
@@ -503,8 +565,8 @@ py_read_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     memset(&ls, 0, sizeof(struct sanlk_lockspace));
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|kII", kwlist,
-        &path, &ls.host_id_disk.offset, &align, &sector)) {
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O&|kII", kwlist,
+        Py2Py3_PathConverter, &path, &ls.host_id_disk.offset, &align, &sector)) {
         return NULL;
     }
 
@@ -564,7 +626,7 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
 {
     int rv, rs_len;
     uint32_t  align=SANLK_RES_ALIGN1M, sector=SANLK_RES_SECTOR512;
-    const char *path;
+    char path[SANLK_PATH_LEN];
     struct sanlk_resource *rs;
     PyObject *rs_info = NULL, *rs_entry = NULL;
 
@@ -584,8 +646,8 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
     rs->num_disks = 1;
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|kII", kwlist,
-        &path, &(rs->disks[0].offset), &align, &sector)) {
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O&|kII", kwlist,
+        Py2Py3_PathConverter, &path, &(rs->disks[0].offset), &align, &sector)) {
         goto exit_fail;
     }
 
@@ -722,7 +784,8 @@ py_add_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
 {
     int rv, async = 0, flags = 0;
     uint32_t iotimeout = 0;
-    const char *lockspace, *path;
+    const char *lockspace;
+    char path[SANLK_PATH_LEN];
     struct sanlk_lockspace ls;
 
     static char *kwlist[] = {"lockspace", "host_id", "path", "offset",
@@ -732,8 +795,8 @@ py_add_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     memset(&ls, 0, sizeof(struct sanlk_lockspace));
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sks|kIi", kwlist,
-        &lockspace, &ls.host_id, &path, &ls.host_id_disk.offset, &iotimeout,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "skO&|kIi", kwlist,
+        &lockspace, &ls.host_id, Py2Py3_PathConverter, &path, &ls.host_id_disk.offset, &iotimeout,
         &async)) {
         return NULL;
     }
@@ -773,7 +836,8 @@ static PyObject *
 py_inq_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
 {
     int rv, waitrs = 0, flags = 0;
-    const char *lockspace, *path;
+    const char *lockspace;
+    char path[SANLK_PATH_LEN];
     struct sanlk_lockspace ls;
 
     static char *kwlist[] = {"lockspace", "host_id", "path", "offset",
@@ -783,8 +847,8 @@ py_inq_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     memset(&ls, 0, sizeof(struct sanlk_lockspace));
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sks|ki", kwlist,
-        &lockspace, &ls.host_id, &path, &ls.host_id_disk.offset,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "skO&|ki", kwlist,
+        &lockspace, &ls.host_id, Py2Py3_PathConverter, &path, &ls.host_id_disk.offset,
         &waitrs)) {
         return NULL;
     }
@@ -829,7 +893,8 @@ static PyObject *
 py_rem_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
 {
     int rv, async = 0, unused = 0, flags = 0;
-    const char *lockspace, *path;
+    const char *lockspace;
+    char path[SANLK_PATH_LEN];
     struct sanlk_lockspace ls;
 
     static char *kwlist[] = {"lockspace", "host_id", "path", "offset",
@@ -839,8 +904,8 @@ py_rem_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
     memset(&ls, 0, sizeof(struct sanlk_lockspace));
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sks|kii", kwlist,
-        &lockspace, &ls.host_id, &path, &ls.host_id_disk.offset, &async,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "skO&|kii", kwlist,
+        &lockspace, &ls.host_id, Py2Py3_PathConverter, &path, &ls.host_id_disk.offset, &async,
         &unused)) {
         return NULL;
     }
@@ -1266,14 +1331,15 @@ py_killpath(PyObject *self __unused, PyObject *args, PyObject *keywds)
 {
     int rv, i, j, n, num_args, sanlockfd = -1;
     char kpargs[SANLK_HELPER_ARGS_LEN];
-    const char *p, *path;
+    const char *p;
+    char path[SANLK_PATH_LEN];
     PyObject *argslist, *item;
 
     static char *kwlist[] = {"path", "args", "slkfd", NULL};
 
     /* parse python tuple */
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sO!|i", kwlist,
-        &path, &PyList_Type, &argslist, &sanlockfd)) {
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O&O!|i", kwlist,
+        Py2Py3_PathConverter, &path, &PyList_Type, &argslist, &sanlockfd)) {
         return NULL;
     }
 
