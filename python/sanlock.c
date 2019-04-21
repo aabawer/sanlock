@@ -33,7 +33,7 @@
 #define MODULE_NAME "sanlock"
 
 /* py2py3 function wrappers */
-long Py2Py3IntAsLong(PyObject* obj)
+long Py2Py3_IntAsLong(PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyLong_AsLong(obj);
@@ -42,7 +42,7 @@ long Py2Py3IntAsLong(PyObject* obj)
 #endif
 }
 
-int Py2Py3StringCheck(PyObject* obj)
+int Py2Py3_StringCheck(PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_Check(obj);
@@ -51,8 +51,7 @@ int Py2Py3StringCheck(PyObject* obj)
 #endif
 }
 
-
-PyObject* Py2Py3StringFromString(const char* str)
+PyObject* Py2Py3_StringFromString(const char* str)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_FromString(str);    
@@ -61,8 +60,7 @@ PyObject* Py2Py3StringFromString(const char* str)
 #endif
 }
 
-
-PyObject* Py2Py3BytesFromString(const char* str)
+PyObject* Py2Py3_BytesFromString(const char* str)
 {
 #if PY_MAJOR_VERSION >= 3	
     return PyBytes_FromString(str);
@@ -71,7 +69,7 @@ PyObject* Py2Py3BytesFromString(const char* str)
 #endif
 }
 
-const char* Py2Py3AsString(PyObject* obj)
+const char* Py2Py3_AsString(PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_AsUTF8(obj);
@@ -80,7 +78,7 @@ const char* Py2Py3AsString(PyObject* obj)
 #endif
 }
 
-unsigned long Py2Py3IntAsUnsignedLongMask(PyObject* obj)
+unsigned long Py2Py3_IntAsUnsignedLongMask(PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyLong_AsUnsignedLongMask(obj);
@@ -89,8 +87,7 @@ unsigned long Py2Py3IntAsUnsignedLongMask(PyObject* obj)
 #endif
 }
 
-
-PyObject* Py2Py3IntFromLong(long val)
+PyObject* Py2Py3_IntFromLong(long val)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyLong_FromLong(val);		
@@ -99,8 +96,7 @@ PyObject* Py2Py3IntFromLong(long val)
 #endif
 }
 
-
-int Py2Py3IntCheck(PyObject* obj)
+int Py2Py3_IntCheck(PyObject* obj)
 {
 #if PY_MAJOR_VERSION >= 3
 	return PyLong_Check(obj);
@@ -182,14 +178,14 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
             path = PyTuple_GetItem(tuple, 0);
             offset = PyTuple_GetItem(tuple, 1);
 
-            p = Py2Py3AsString(path);
+            p = Py2Py3_AsString(path);
 
-            if (!Py2Py3IntCheck(offset)) {
+            if (!Py2Py3_IntCheck(offset)) {
                 __set_exception(EINVAL, "Invalid resource offset");
                 goto exit_fail;
             }
-        } else if (Py2Py3StringCheck(tuple)) {
-            p = Py2Py3AsString(tuple);
+        } else if (Py2Py3_StringCheck(tuple)) {
+            p = Py2Py3_AsString(tuple);
         }
 
         if (p == NULL) {
@@ -202,7 +198,7 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
         if (offset == NULL) {
             res->disks[i].offset = 0;
         } else {
-            res->disks[i].offset = Py2Py3IntAsLong(offset);
+            res->disks[i].offset = Py2Py3_IntAsLong(offset);
         }
     }
 
@@ -229,7 +225,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: host_id */
-        if ((ls_value = Py2Py3IntFromLong(hss[i].host_id)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(hss[i].host_id)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "host_id", ls_value);
         Py_DECREF(ls_value);
@@ -237,7 +233,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: generation */
-        if ((ls_value = Py2Py3IntFromLong(hss[i].generation)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(hss[i].generation)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "generation", ls_value);
         Py_DECREF(ls_value);
@@ -245,7 +241,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: timestamp */
-        if ((ls_value = Py2Py3IntFromLong(hss[i].timestamp)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(hss[i].timestamp)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "timestamp", ls_value);
         Py_DECREF(ls_value);
@@ -253,7 +249,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: io_timeout */
-        if ((ls_value = Py2Py3IntFromLong(hss[i].io_timeout)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(hss[i].io_timeout)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "io_timeout", ls_value);
         Py_DECREF(ls_value);
@@ -261,7 +257,7 @@ __hosts_to_list(struct sanlk_host *hss, int hss_count)
             goto exit_fail;
 
         /* fill the dictionary information: flags */
-        if ((ls_value = Py2Py3IntFromLong(hss[i].flags)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(hss[i].flags)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "flags", ls_value);
         Py_DECREF(ls_value);
@@ -304,7 +300,7 @@ py_register(PyObject *self __unused, PyObject *args)
         return NULL;
     }
 
-    return Py2Py3IntFromLong(sanlockfd);
+    return Py2Py3_IntFromLong(sanlockfd);
 }
 
 /* get_alignment */
@@ -337,7 +333,7 @@ py_get_alignment(PyObject *self __unused, PyObject *args)
         return NULL;
     }
 
-    return Py2Py3IntFromLong(rv);
+    return Py2Py3_IntFromLong(rv);
 }
 
 /* init_lockspace */
@@ -534,7 +530,7 @@ py_read_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: lockspace */
-    if ((ls_entry = Py2Py3BytesFromString(ls.name)) == NULL)
+    if ((ls_entry = Py2Py3_BytesFromString(ls.name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(ls_info, "lockspace", ls_entry);
     Py_DECREF(ls_entry);
@@ -542,7 +538,7 @@ py_read_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: iotimeout */
-    if ((ls_entry = Py2Py3IntFromLong(io_timeout)) == NULL)
+    if ((ls_entry = Py2Py3_IntFromLong(io_timeout)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(ls_info, "iotimeout", ls_entry);
     Py_DECREF(ls_entry);
@@ -615,7 +611,7 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: lockspace */
-    if ((rs_entry = Py2Py3BytesFromString(rs->lockspace_name)) == NULL)
+    if ((rs_entry = Py2Py3_BytesFromString(rs->lockspace_name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(rs_info, "lockspace", rs_entry);
     Py_DECREF(rs_entry);
@@ -623,7 +619,7 @@ py_read_resource(PyObject *self __unused, PyObject *args, PyObject *keywds)
         goto exit_fail;
 
     /* fill the dictionary information: resource */
-    if ((rs_entry = Py2Py3BytesFromString(rs->name)) == NULL)
+    if ((rs_entry = Py2Py3_BytesFromString(rs->name)) == NULL)
         goto exit_fail;
     rv = PyDict_SetItemString(rs_info, "resource", rs_entry);
     Py_DECREF(rs_entry);
@@ -909,7 +905,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: lockspace */
-        if ((ls_value = Py2Py3BytesFromString(lss[i].name)) == NULL)
+        if ((ls_value = Py2Py3_BytesFromString(lss[i].name)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "lockspace", ls_value);
         Py_DECREF(ls_value);
@@ -917,7 +913,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: host_id */
-        if ((ls_value = Py2Py3IntFromLong(lss[i].host_id)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(lss[i].host_id)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "host_id", ls_value);
         Py_DECREF(ls_value);
@@ -925,7 +921,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: path */
-        if ((ls_value = Py2Py3StringFromString(lss[i].host_id_disk.path)) == NULL)
+        if ((ls_value = Py2Py3_StringFromString(lss[i].host_id_disk.path)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "path", ls_value);
         Py_DECREF(ls_value);
@@ -933,7 +929,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: offset */
-        if ((ls_value = Py2Py3IntFromLong(lss[i].host_id_disk.offset)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(lss[i].host_id_disk.offset)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "offset", ls_value);
         Py_DECREF(ls_value);
@@ -941,7 +937,7 @@ py_get_lockspaces(PyObject *self __unused, PyObject *args, PyObject *keywds)
             goto exit_fail;
 
         /* fill the dictionary information: flags */
-        if ((ls_value = Py2Py3IntFromLong(lss[i].flags)) == NULL)
+        if ((ls_value = Py2Py3_IntFromLong(lss[i].flags)) == NULL)
             goto exit_fail;
         rv = PyDict_SetItemString(ls_entry, "flags", ls_value);
         Py_DECREF(ls_value);
@@ -1063,7 +1059,7 @@ py_acquire(PyObject *self __unused, PyObject *args, PyObject *keywds)
     /* prepare the resource version */
     if (version != Py_None) {
         res->flags |= SANLK_RES_LVER;
-        res->lver = Py2Py3IntAsUnsignedLongMask(version);
+        res->lver = Py2Py3_IntAsUnsignedLongMask(version);
         if (res->lver == -1) {
             __set_exception(EINVAL, "Unable to convert the version value");
             goto exit_fail;
@@ -1179,7 +1175,7 @@ py_request(PyObject *self __unused, PyObject *args, PyObject *keywds)
         flags = SANLK_REQUEST_NEXT_LVER;
     } else {
         res->flags |= SANLK_RES_LVER;
-        res->lver = Py2Py3IntAsUnsignedLongMask(version);
+        res->lver = Py2Py3_IntAsUnsignedLongMask(version);
         if (res->lver == -1) {
             __set_exception(EINVAL, "Unable to convert the version value");
             goto exit_fail;
@@ -1294,7 +1290,7 @@ py_killpath(PyObject *self __unused, PyObject *args, PyObject *keywds)
         size_t arg_len;
 
         item = PyList_GetItem(argslist, i);
-        p = Py2Py3AsString(item);
+        p = Py2Py3_AsString(item);
 
         if (p == NULL) {
             __set_exception(EINVAL, "Killpath argument not a string");
@@ -1697,12 +1693,12 @@ int module_init(PyObject* py_module)
         return -1;
 
     if (PyModule_AddObject(py_module, "SanlockException", py_exception) != 0) {
- 		return -1;
+        return -1;
     }
     Py_INCREF(py_exception);
 
 #define PYSNLK_INIT_ADD_CONSTANT(x, y) \
-    if ((sk_constant = Py2Py3IntFromLong(x)) != NULL) { \
+    if ((sk_constant = Py2Py3_IntFromLong(x)) != NULL) { \
         if (PyModule_AddObject(py_module, y, sk_constant) != 0) { \
             Py_DECREF(sk_constant); \
 	    	return -1; \
