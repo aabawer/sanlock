@@ -1696,14 +1696,10 @@ int module_init(PyObject* py_module)
     if (py_exception == NULL)
         return -1;
 
-    if (PyModule_AddObject(py_module, "SanlockException", py_exception) == 0)
-   	{
-        Py_INCREF(py_exception);
-    }
-    else
-    {
+    if (PyModule_AddObject(py_module, "SanlockException", py_exception) != 0) {
  		return -1;
     }
+    Py_INCREF(py_exception);
 
 #define PYSNLK_INIT_ADD_CONSTANT(x, y) \
     if ((sk_constant = Py2Py3IntFromLong(x)) != NULL) { \
@@ -1744,7 +1740,7 @@ int module_init(PyObject* py_module)
     PYSNLK_INIT_ADD_CONSTANT(SANLK_RES_ALIGN8M, "ALIGN8M");
 
 #undef PYSNLK_INIT_ADD_CONSTANT
-    
+
     return 0;
 }
 
@@ -1761,7 +1757,7 @@ static struct PyModuleDef moduledef = {
 PyMODINIT_FUNC
 PyInit_sanlock(void)
 {
-    PyObject *py_module;    	
+    PyObject *py_module;
 
     py_module = PyModule_Create(&moduledef);
 
@@ -1769,7 +1765,7 @@ PyInit_sanlock(void)
         return NULL;
     
     if (module_init(py_module) != 0)
-	return NULL;
+        return NULL;
 
     return py_module;
 }
@@ -1789,7 +1785,7 @@ initsanlock(void)
 
     if (py_module == NULL)
         return;
-    
+
     module_init(py_module);
 }
 
