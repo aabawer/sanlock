@@ -54,7 +54,7 @@ int Py2Py3_StringCheck(PyObject* obj)
 PyObject* Py2Py3_StringFromString(const char* str)
 {
 #if PY_MAJOR_VERSION >= 3
-	return PyUnicode_FromString(str);    
+	return PyUnicode_FromString(str);
 #else
 	return PyString_FromString(str);
 #endif
@@ -62,7 +62,7 @@ PyObject* Py2Py3_StringFromString(const char* str)
 
 PyObject* Py2Py3_BytesFromString(const char* str)
 {
-#if PY_MAJOR_VERSION >= 3	
+#if PY_MAJOR_VERSION >= 3
     return PyBytes_FromString(str);
 #else
 	return PyString_FromString(str);
@@ -74,7 +74,7 @@ const char* Py2Py3_AsString(PyObject* obj)
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_AsUTF8(obj);
 #else
-	return PyString_AsString(obj);	
+	return PyString_AsString(obj);
 #endif
 }
 
@@ -90,7 +90,7 @@ unsigned long Py2Py3_IntAsUnsignedLongMask(PyObject* obj)
 PyObject* Py2Py3_IntFromLong(long val)
 {
 #if PY_MAJOR_VERSION >= 3
-	return PyLong_FromLong(val);		
+	return PyLong_FromLong(val);
 #else
 	return PyInt_FromLong(val);
 #endif
