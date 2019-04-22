@@ -127,19 +127,19 @@ int Py2Py3_PathConverter(PyObject* arg, void* path)
     PyObject *bytes = NULL;
     const char* path_bytes = NULL;
 
-    if (arg == NULL || arg == Py_None){
+    if (arg == NULL || arg == Py_None) {
         __set_exception(EINVAL, "Unable to convert path [invalid argument]");
         return 0;
 	}
 
-    if (path == NULL){
+    if (path == NULL) {
         __set_exception(EINVAL, "Unable to convert path [invalid result path address]");
         return 0;
 	}
 
 #if PY_MAJOR_VERSION >= 3
     /* Python3 handling of unicode/bytes object */
-    if (!PyUnicode_FSConverter(arg, &bytes)){
+    if (!PyUnicode_FSConverter(arg, &bytes)) {
         __set_exception(EINVAL, "Unable to convert path [fs converter failed]");
         return 0;
     }
@@ -149,14 +149,13 @@ int Py2Py3_PathConverter(PyObject* arg, void* path)
         bytes = PyUnicode_AsUTF8String(arg);
     else if (PyBytes_Check(arg))
         bytes = PyObject_Bytes(arg);
-    else
-    {
-        __set_exception(EINVAL, "Unable to convert path [unicode/bytes converter failed]");
+    else {
+        __set_exception(EINVAL, "Unable to convert path [supporting unicode or bytes]");
         return 0;
     }
 #endif
     path_bytes = PyBytes_AsString(bytes);
-    if (path_bytes == NULL){
+    if (path_bytes == NULL) {
         Py_XDECREF(bytes);
         __set_exception(EINVAL, "Unable to convert path [string converter failed]");
         return 0;
