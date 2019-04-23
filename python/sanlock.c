@@ -521,7 +521,7 @@ py_write_lockspace(PyObject *self __unused, PyObject *args, PyObject *keywds)
 
     /* parse python tuple */
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "sO&|kiIII", kwlist,
-        &lockspace, Py2Py3_PathConverter, path, &ls.host_id_disk.offset, &max_hosts,
+        &lockspace, Py2Py3_PathConverter, &path, &ls.host_id_disk.offset, &max_hosts,
         &io_timeout, &align, &sector)) {
         return NULL;
     }
