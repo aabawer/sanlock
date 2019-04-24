@@ -31,8 +31,14 @@ MIN_RES_SIZE = 1024**2
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - LOCKSPACE_SIZE),
 ])
-def test_write_lockspace(tmpdir, sanlock_daemon, size, offset):
-    path = str(tmpdir.join("lockspace"))
+@pytest.mark.parametrize("path_encoding", [
+    None,
+    'utf-8',
+    'ascii',
+])
+def test_write_lockspace(tmpdir, sanlock_daemon, size, offset, path_encoding):
+    path = util.generate_path(tmpdir, "lockspace", path_encoding)
+    print("path=",path)
     util.create_file(path, size)
 
     sanlock.write_lockspace("name", path, offset=offset, iotimeout=1)
@@ -60,8 +66,13 @@ def test_write_lockspace(tmpdir, sanlock_daemon, size, offset):
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
 ])
-def test_write_resource(tmpdir, sanlock_daemon, size, offset):
-    path = str(tmpdir.join("resources"))
+@pytest.mark.parametrize("path_encoding", [
+    None,
+    'utf-8',
+    'ascii',
+])
+def test_write_resource(tmpdir, sanlock_daemon, size, offset, path_encoding):
+    path = util.generate_path(tmpdir, "resources", path_encoding)
     util.create_file(path, size)
     disks = [(path, offset)]
 
@@ -93,8 +104,13 @@ def test_write_resource(tmpdir, sanlock_daemon, size, offset):
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
 ])
-def test_add_rem_lockspace(tmpdir, sanlock_daemon, size, offset):
-    path = str(tmpdir.join("ls_name"))
+@pytest.mark.parametrize("path_encoding", [
+    None,
+    'utf-8',
+    'ascii',
+])
+def test_add_rem_lockspace(tmpdir, sanlock_daemon, size, offset, path_encoding):
+    path = util.generate_path(tmpdir, "ls_name", path_encoding)
     util.create_file(path, size)
 
     sanlock.write_lockspace("ls_name", path, offset=offset, iotimeout=1)
@@ -118,9 +134,13 @@ def test_add_rem_lockspace(tmpdir, sanlock_daemon, size, offset):
         "ls_name", 1, path, offset=offset, wait=False)
     assert acquired is False
 
-
-def test_add_rem_lockspace_async(tmpdir, sanlock_daemon):
-    path = str(tmpdir.join("ls_name"))
+@pytest.mark.parametrize("path_encoding", [
+    None,
+    'utf-8',
+    'ascii',
+])
+def test_add_rem_lockspace_async(tmpdir, sanlock_daemon, path_encoding):
+    path = util.generate_path(tmpdir, "ls_name", path_encoding)
     util.create_file(path, 1024**2)
 
     sanlock.write_lockspace("ls_name", path, iotimeout=1)
@@ -161,11 +181,16 @@ def test_add_rem_lockspace_async(tmpdir, sanlock_daemon):
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
 ])
-def test_acquire_release_resource(tmpdir, sanlock_daemon, size, offset):
-    ls_path = str(tmpdir.join("ls_name"))
+@pytest.mark.parametrize("path_encoding", [
+    None,
+    'utf-8',
+    'ascii',
+])
+def test_acquire_release_resource(tmpdir, sanlock_daemon, size, offset, path_encoding):
+    ls_path = util.generate_path(tmpdir, "ls_name", path_encoding)
     util.create_file(ls_path, size)
 
-    res_path = str(tmpdir.join("res_name"))
+    res_path = util.generate_path(tmpdir, "res_name", path_encoding)
     util.create_file(res_path, size)
 
     sanlock.write_lockspace("ls_name", ls_path, offset=offset, iotimeout=1)
