@@ -31,8 +31,14 @@ MIN_RES_SIZE = 1024**2
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - LOCKSPACE_SIZE),
 ])
-def test_write_lockspace(tmpdir, sanlock_daemon, size, offset):
-    path = str(tmpdir.join("lockspace"))
+@pytest.mark.parametrize("filename,encoding", [
+    (u"ascii", None),
+    (u"\u05d0", None),
+    ("ascii", None),
+    (u"\u05d0", "utf-8"),
+])
+def test_write_lockspace(tmpdir, sanlock_daemon, size, offset, filename, encoding):
+    path = util.generate_path(tmpdir, filename, encoding)
     util.create_file(path, size)
 
     sanlock.write_lockspace("name", path, offset=offset, iotimeout=1)
@@ -60,8 +66,14 @@ def test_write_lockspace(tmpdir, sanlock_daemon, size, offset):
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
 ])
-def test_write_resource(tmpdir, sanlock_daemon, size, offset):
-    path = str(tmpdir.join("resources"))
+@pytest.mark.parametrize("filename,encoding", [
+    (u"ascii", None),
+    (u"\u05d0", None),
+    ("ascii", None),
+    (u"\u05d0", "utf-8"),
+])
+def test_write_resource(tmpdir, sanlock_daemon, size, offset, filename, encoding):
+    path = util.generate_path(tmpdir, filename, encoding)
     util.create_file(path, size)
     disks = [(path, offset)]
 
@@ -93,8 +105,14 @@ def test_write_resource(tmpdir, sanlock_daemon, size, offset):
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
 ])
-def test_add_rem_lockspace(tmpdir, sanlock_daemon, size, offset):
-    path = str(tmpdir.join("ls_name"))
+@pytest.mark.parametrize("filename,encoding", [
+    (u"ascii", None),
+    (u"\u05d0", None),
+    ("ascii", None),
+    (u"\u05d0", "utf-8"),
+])
+def test_add_rem_lockspace(tmpdir, sanlock_daemon, size, offset, filename, encoding):
+    path = util.generate_path(tmpdir, filename, encoding)
     util.create_file(path, size)
 
     sanlock.write_lockspace("ls_name", path, offset=offset, iotimeout=1)
@@ -120,7 +138,7 @@ def test_add_rem_lockspace(tmpdir, sanlock_daemon, size, offset):
 
 
 def test_add_rem_lockspace_async(tmpdir, sanlock_daemon):
-    path = str(tmpdir.join("ls_name"))
+    path = util.generate_path(tmpdir, "ls_name")
     util.create_file(path, 1024**2)
 
     sanlock.write_lockspace("ls_name", path, iotimeout=1)
@@ -162,10 +180,10 @@ def test_add_rem_lockspace_async(tmpdir, sanlock_daemon):
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
 ])
 def test_acquire_release_resource(tmpdir, sanlock_daemon, size, offset):
-    ls_path = str(tmpdir.join("ls_name"))
+    ls_path = util.generate_path(tmpdir, "ls_name")
     util.create_file(ls_path, size)
 
-    res_path = str(tmpdir.join("res_name"))
+    res_path = util.generate_path(tmpdir, "res_name")
     util.create_file(res_path, size)
 
     sanlock.write_lockspace("ls_name", ls_path, offset=offset, iotimeout=1)
