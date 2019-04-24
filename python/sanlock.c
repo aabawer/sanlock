@@ -211,6 +211,7 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
 {
     int i, num_disks, res_len;
     struct sanlk_resource *res;
+    char path_bytes[SANLK_PATH_LEN];
 
     num_disks = PyList_Size(obj);
 
@@ -227,7 +228,6 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
     res->num_disks = num_disks;
 
     for (i = 0; i < num_disks; i++) {
-        const char *p = NULL;
         PyObject *tuple, *path = NULL, *offset = NULL;
 
         tuple = PyList_GetItem(obj, i);
@@ -241,22 +241,21 @@ __parse_resource(PyObject *obj, struct sanlk_resource **res_ret)
             path = PyTuple_GetItem(tuple, 0);
             offset = PyTuple_GetItem(tuple, 1);
 
-            p = Py2Py3_AsString(path);
+            if (!Py2Py3_PathConverter(path, path_bytes)) {
+                 __set_exception(EINVAL, "Invalid resource path");
+                goto exit_fail;
+            }
 
             if (!Py2Py3_IntCheck(offset)) {
                 __set_exception(EINVAL, "Invalid resource offset");
                 goto exit_fail;
             }
-        } else if (Py2Py3_StringCheck(tuple)) {
-            p = Py2Py3_AsString(tuple);
-        }
-
-        if (p == NULL) {
+        } else if (!Py2Py3_PathConverter(path, path_bytes)) {
             __set_exception(EINVAL, "Invalid resource path");
             goto exit_fail;
         }
 
-        strncpy(res->disks[i].path, p, SANLK_PATH_LEN - 1);
+        strncpy(res->disks[i].path, path_bytes, SANLK_PATH_LEN - 1);
 
         if (offset == NULL) {
             res->disks[i].offset = 0;
