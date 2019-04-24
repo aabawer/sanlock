@@ -108,6 +108,41 @@ int Py2Py3_IntCheck(PyObject* obj)
 	return PyInt_Check(obj);
 #endif
 }
+PyObject* Py2Py3_UnicodeToBytesConverter(PyObject* unicode_obj)
+{
+    PyObject *bytes_obj = NULL;
+
+    if (unicode_obj == NULL || unicode_obj == Py_None) {
+        __set_exception(EINVAL, "Invalid unicode object address");
+        return NULL;
+	}
+
+#if PY_MAJOR_VERSION >= 3
+    /* Python3 handling of unicode/bytes object */
+    if (!PyUnicode_FSConverter(unicode_obj, &bytes_obj)) {
+        __set_exception(EINVAL, "FS conversion failed");
+        return NULL;
+    }
+#else
+    /* Python2 handling of unicode/bytes object */
+    if (PyUnicode_Check(unicode_obj))
+        bytes_obj = PyUnicode_AsUTF8String(unicode_obj);
+    else if (PyBytes_Check(unicode_obj))
+        bytes_obj = PyObject_Bytes(unicode_obj);
+    else {
+        __set_exception(EINVAL, "Invalid legacy unicode or bytes object for conversion");
+        return NULL;
+    }
+
+    if (bytes_obj == NULL) {
+        __set_exception(EINVAL, "Legacy unicode or bytes conversion failed");
+        return NULL;
+    }
+#endif
+    /* success */
+    return bytes_obj;
+}
+
 /*
  * Path converter function
  *
@@ -124,40 +159,25 @@ int Py2Py3_IntCheck(PyObject* obj)
  */
 int Py2Py3_PathConverter(PyObject* arg, void* path)
 {
-    PyObject *bytes = NULL;
+    PyObject *bytes_obj = NULL;
     const char* path_bytes = NULL;
 
     if (arg == NULL || arg == Py_None) {
         __set_exception(EINVAL, "Unable to convert path [invalid argument]");
         return 0;
 	}
-
     if (path == NULL) {
         __set_exception(EINVAL, "Unable to convert path [invalid result path address]");
         return 0;
 	}
-
-#if PY_MAJOR_VERSION >= 3
-    /* Python3 handling of unicode/bytes object */
-    if (!PyUnicode_FSConverter(arg, &bytes)) {
-        __set_exception(EINVAL, "Unable to convert path [fs converter failed]");
+	
+    bytes_obj = Py2Py3_UnicodeToBytesConverter(arg);
+    if (bytes_obj == NULL) {
         return 0;
     }
-#else
-    /* Python2 handling of unicode/bytes object */
-    if (PyUnicode_Check(arg))
-        bytes = PyUnicode_AsUTF8String(arg);
-    else if (PyBytes_Check(arg))
-        bytes = PyObject_Bytes(arg);
-    else {
-        __set_exception(EINVAL, "Unable to convert path [supporting unicode or bytes]");
-        return 0;
-    }
-#endif
-    path_bytes = PyBytes_AsString(bytes);
-    if (path_bytes == NULL) {
-        Py_XDECREF(bytes);
-        __set_exception(EINVAL, "Unable to convert path [string converter failed]");
+    path_bytes = PyBytes_AsString(bytes_obj);
+    if (path_bytes == NULL){
+        Py_XDECREF(bytes_obj);
         return 0;
     }
     /*
@@ -165,12 +185,10 @@ int Py2Py3_PathConverter(PyObject* arg, void* path)
      * path_bytes internal refernce to the result path
      */
     strncpy((char*)path, path_bytes, SANLK_PATH_LEN - 1);
-
     /* success */
-    Py_XDECREF(bytes);
+    Py_XDECREF(bytes_obj);
     return 1;
 }
-
 
 /* Sanlock module */
 PyDoc_STRVAR(pydoc_sanlock, "\
