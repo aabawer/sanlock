@@ -374,11 +374,11 @@ static PyObject *
 py_get_alignment(PyObject *self __unused, PyObject *args)
 {
     int rv;
-    const char *path;
+    char path[SANLK_PATH_LEN];
     struct sanlk_disk disk;
 
     /* parse python tuple */
-    if (!PyArg_ParseTuple(args, "s", &path)) {
+    if (!PyArg_ParseTuple(args, "O&", Py2Py3_PathConverter, &path)) {
         return NULL;
     }
 
