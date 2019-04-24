@@ -133,3 +133,15 @@ def check_rindex_entry(entry, name, offset=None, flags=None):
 
     if flags is not None:
         assert e_flags == flags
+
+
+def generate_path(dirname, filename, encoding=None):
+    #unicode string
+    if encoding is None:
+        path = str(dirname.join(filename))
+        return path
+    #encoded bytes
+    dirname_bytes = (str(dirname)).encode(encoding)
+    filename_bytes  = (str(filename)).encode(encoding)
+    path = b"".join([dirname_bytes, b"/", filename_bytes]) 
+    return path
