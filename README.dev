@@ -1,3 +1,11 @@
+Prerequisites
+=============
+
+Install following development libraries:
+
+   $ yum install -y libaio-devel  libblkid-devel
+
+
 How to test sanlock
 ===================
 
