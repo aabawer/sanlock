@@ -30,6 +30,9 @@
 #define __neg_sets_exception
 #endif
 
+
+#define MODULE_NAME "sanlock"
+
 /* Functions prototypes */
 static void __set_exception(int en, char *msg) __sets_exception;
 static int __parse_resource(PyObject *obj, struct sanlk_resource **res_ret) __neg_sets_exception;
@@ -1604,30 +1607,28 @@ exit_fail:
     return excp;
 }
 
-PyMODINIT_FUNC
-initsanlock(void)
+
+/* Init Sanlock module */
+static int 
+module_init(PyObject* py_module)
 {
-    PyObject *py_module, *sk_constant;
-
-    py_module = Py_InitModule4("sanlock",
-                sanlock_methods, pydoc_sanlock, NULL, PYTHON_API_VERSION);
-
-    if (py_module == NULL)
-        return;
+    PyObject* sk_constant;
 
     py_exception = initexception();
 
     if (py_exception == NULL)
-        return;
+        return -1;
 
-    if (PyModule_AddObject(py_module, "SanlockException", py_exception) == 0) {
-        Py_INCREF(py_exception);
+    if (PyModule_AddObject(py_module, "SanlockException", py_exception) != 0) {
+        return -1;
     }
+    Py_INCREF(py_exception);
 
 #define PYSNLK_INIT_ADD_CONSTANT(x, y) \
-    if ((sk_constant = PyInt_FromLong(x)) != NULL) { \
-        if (PyModule_AddObject(py_module, y, sk_constant)) { \
+    if ((sk_constant = PyLong_FromLong(x)) != NULL) { \
+        if (PyModule_AddObject(py_module, y, sk_constant) != 0) { \
             Py_DECREF(sk_constant); \
+	    	return -1; \
         } \
     }
 
@@ -1662,4 +1663,53 @@ initsanlock(void)
     PYSNLK_INIT_ADD_CONSTANT(SANLK_RES_ALIGN8M, "ALIGN8M");
 
 #undef PYSNLK_INIT_ADD_CONSTANT
+
+    return 0;
 }
+
+#if PY_MAJOR_VERSION >= 3
+/* Python3 module init */
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        MODULE_NAME,
+        pydoc_sanlock,
+        -1,
+        sanlock_methods,
+};
+
+PyMODINIT_FUNC
+PyInit_sanlock(void)
+{
+    PyObject *py_module;
+
+    py_module = PyModule_Create(&moduledef);
+
+    if (py_module == NULL)
+        return NULL;
+
+    if (module_init(py_module) != 0)
+        return NULL;
+
+    return py_module;
+}
+
+#else
+/* Python2 module init */
+PyMODINIT_FUNC
+initsanlock(void)
+{
+    PyObject *py_module;
+
+    py_module = Py_InitModule4(MODULE_NAME,
+            sanlock_methods,
+            pydoc_sanlock,
+            NULL,
+            PYTHON_API_VERSION);
+
+    if (py_module == NULL)
+        return;
+
+    module_init(py_module);
+}
+
+#endif
