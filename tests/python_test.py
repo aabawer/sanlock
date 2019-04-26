@@ -68,8 +68,8 @@ def test_write_resource(tmpdir, sanlock_daemon, size, offset):
 
     res = sanlock.read_resource(path, offset=offset)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b"ls_name",
+        "resource": b"res_name",
         "version": 0
     }
 
@@ -184,8 +184,8 @@ def test_acquire_release_resource(tmpdir, sanlock_daemon, size, offset):
 
     res = sanlock.read_resource(res_path, offset=offset)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b"ls_name",
+        "resource": b"res_name",
         "version": 0
     }
 
@@ -197,8 +197,8 @@ def test_acquire_release_resource(tmpdir, sanlock_daemon, size, offset):
 
     res = sanlock.read_resource(res_path, offset=offset)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b"ls_name",
+        "resource": b"res_name",
         "version": 1
     }
 
@@ -218,8 +218,8 @@ def test_acquire_release_resource(tmpdir, sanlock_daemon, size, offset):
 
     res = sanlock.read_resource(res_path, offset=offset)
     assert res == {
-        "lockspace": "ls_name",
-        "resource": "res_name",
+        "lockspace": b"ls_name",
+        "resource": b"res_name",
         "version": 1
     }
 
