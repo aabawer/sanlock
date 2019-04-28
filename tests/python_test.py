@@ -38,7 +38,6 @@ MIN_RES_SIZE = 1024**2
 ])
 def test_write_lockspace(tmpdir, sanlock_daemon, size, offset, path_encoding):
     path = util.generate_path(tmpdir, "lockspace", path_encoding)
-    print("path=",path)
     util.create_file(path, size)
 
     sanlock.write_lockspace("name", path, offset=offset, iotimeout=1)
