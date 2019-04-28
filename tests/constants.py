@@ -17,3 +17,11 @@ RINDEX_DISK_MAGIC = 0x01042018
 
 RINDEX_ENTRY_SIZE = 64
 RINDEX_ENTRIES_SECTORS = 2000
+
+# Test 'long' type support in Python 3.
+# Done by using an 'int' type that is actually 'long' in its implementation.
+
+import sys
+
+if sys.version_info >= (3,):
+    long = int

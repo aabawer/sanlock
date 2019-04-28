@@ -12,22 +12,22 @@ import pytest
 
 import sanlock
 
-from . import constants
+from . constants import *
 from . import util
 
 # Largest file size on ext4 is 16TiB, and on xfs 500 TiB. Use 1 TiB as it is
 # large enough to test large offsets, and less likely to fail on developer
 # machine or CI slave.
 # See https://access.redhat.com/articles/rhel-limits
-LARGE_FILE_SIZE = 1024**4
+LARGE_FILE_SIZE = 1024**4   # 1 TiB (2^40 bits)
 
-LOCKSPACE_SIZE = 1024**2
-MIN_RES_SIZE = 1024**2
+LOCKSPACE_SIZE = 1024**2    # 1 MiB (2^20 bits)
+MIN_RES_SIZE = 1024**2      # 1 MiB (2^20 bits)
 
 
 @pytest.mark.parametrize("size,offset", [
     # Smallest offset.
-    (LOCKSPACE_SIZE, 0),
+    (long(LOCKSPACE_SIZE), long(0)),
     # Large offset.
     (LARGE_FILE_SIZE, LARGE_FILE_SIZE - LOCKSPACE_SIZE),
 ])
@@ -52,7 +52,7 @@ def test_write_lockspace(tmpdir, sanlock_daemon, size, offset, path_encoding):
     with io.open(path, "rb") as f:
         f.seek(offset)
         magic, = struct.unpack("< I", f.read(4))
-        assert magic == constants.DELTA_DISK_MAGIC
+        assert magic == DELTA_DISK_MAGIC
 
         # TODO: check more stuff here...
 
@@ -63,7 +63,7 @@ def test_write_lockspace(tmpdir, sanlock_daemon, size, offset, path_encoding):
     # Smallest offset.
     (MIN_RES_SIZE, 0),
     # Large offset.
-    (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
+    (long(LARGE_FILE_SIZE), long(LARGE_FILE_SIZE - MIN_RES_SIZE)),
 ])
 @pytest.mark.parametrize("path_encoding", [
     None,
@@ -90,7 +90,7 @@ def test_write_resource(tmpdir, sanlock_daemon, size, offset, path_encoding):
     with io.open(path, "rb") as f:
         f.seek(offset)
         magic, = struct.unpack("< I", f.read(4))
-        assert magic == constants.PAXOS_DISK_MAGIC
+        assert magic == PAXOS_DISK_MAGIC
 
         # TODO: check more stuff here...
 
@@ -99,9 +99,9 @@ def test_write_resource(tmpdir, sanlock_daemon, size, offset, path_encoding):
 
 @pytest.mark.parametrize("size,offset", [
     # Smallest offset.
-    (MIN_RES_SIZE, 0),
+    (long(MIN_RES_SIZE), 0),
     # Large offset.
-    (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
+    (LARGE_FILE_SIZE, long(LARGE_FILE_SIZE - MIN_RES_SIZE)),
 ])
 @pytest.mark.parametrize("path_encoding", [
     None,
@@ -173,12 +173,11 @@ def test_add_rem_lockspace_async(tmpdir, sanlock_daemon, path_encoding):
     acquired = sanlock.inq_lockspace("ls_name", 1, path, wait=True)
     assert acquired is False
 
-
 @pytest.mark.parametrize("size,offset", [
     # Smallest offset.
-    (MIN_RES_SIZE, 0),
+    (MIN_RES_SIZE, long(0)),
     # Large offset.
-    (LARGE_FILE_SIZE, LARGE_FILE_SIZE - MIN_RES_SIZE),
+    (LARGE_FILE_SIZE, long(LARGE_FILE_SIZE) - MIN_RES_SIZE),
 ])
 @pytest.mark.parametrize("path_encoding", [
     None,
